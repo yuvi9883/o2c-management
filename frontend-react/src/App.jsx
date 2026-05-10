@@ -9,27 +9,31 @@ import OrderDetails from "./pages/OrderDetails";
 import Invoices from "./pages/Invoices";
 import Payments from "./pages/Payments";
 import Customers from "./pages/Customers";
+import { AuthProvider } from "./Context/AuthContext";
 
 export default function App() {
   return (
-    <Router>
-      <Routes>
-        {/* Auth pages — no layout */}
-        <Route path="/" element={<Navigate to="/login" />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+    // ✅ WRAP EVERYTHING with AuthProvider
+    <AuthProvider>
+      <Router>
+        <Routes>
+          {/* Auth pages — no layout */}
+          <Route path="/" element={<Navigate to="/login" />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
 
-        {/* App pages — with sidebar + navbar layout */}
-        <Route element={<Layout />}>
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/orders" element={<Orders />} />
-          <Route path="/orders/create" element={<CreateOrder />} />
-          <Route path="/orders/:id" element={<OrderDetails />} />
-          <Route path="/invoices" element={<Invoices />} />
-          <Route path="/payments" element={<Payments />} />
-          <Route path="/customers" element={<Customers />} />
-        </Route>
-      </Routes>
-    </Router>
+          {/* App pages — with sidebar + navbar layout */}
+          <Route element={<Layout />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/orders" element={<Orders />} />
+            <Route path="/orders/create" element={<CreateOrder />} />
+            <Route path="/orders/:id" element={<OrderDetails />} />
+            <Route path="/invoices" element={<Invoices />} />
+            <Route path="/payments" element={<Payments />} />
+            <Route path="/customers" element={<Customers />} />
+          </Route>
+        </Routes>
+      </Router>
+    </AuthProvider>  // ✅ closing tag
   );
 }

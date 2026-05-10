@@ -1,11 +1,9 @@
 import { NavLink } from "react-router-dom";
-import { useEffect, useState } from "react";
-import { getProfile } from "../Services/api";
+import { useAuth } from "../Context/AuthContext"; // ✅ use context
 
 const navItems = [
   {
-    label: "Dashboard",
-    path: "/dashboard",
+    label: "Dashboard", path: "/dashboard",
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
@@ -14,8 +12,7 @@ const navItems = [
     ),
   },
   {
-    label: "Orders",
-    path: "/orders",
+    label: "Orders", path: "/orders",
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
@@ -24,8 +21,7 @@ const navItems = [
     ),
   },
   {
-    label: "Invoices",
-    path: "/invoices",
+    label: "Invoices", path: "/invoices",
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
@@ -34,8 +30,7 @@ const navItems = [
     ),
   },
   {
-    label: "Payments",
-    path: "/payments",
+    label: "Payments", path: "/payments",
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
@@ -44,8 +39,7 @@ const navItems = [
     ),
   },
   {
-    label: "Customers",
-    path: "/customers",
+    label: "Customers", path: "/customers",
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
@@ -56,13 +50,8 @@ const navItems = [
 ];
 
 export default function Sidebar() {
-  const [profile, setProfile] = useState(null);
-
-  useEffect(() => {
-    getProfile()
-      .then((res) => setProfile(res.data))
-      .catch(() => {});
-  }, []);
+  // ✅ Get profile from context — no API call needed
+  const { profile } = useAuth();
 
   const initials = profile?.fullName
     ? profile.fullName.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
@@ -93,11 +82,12 @@ export default function Sidebar() {
             key={item.path}
             to={item.path}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group
-              ${isActive
-                ? "bg-white text-black"
-                : "text-white/60 hover:text-white hover:bg-white/10"
-              }`
+              `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
+               transition-all duration-200 group
+               ${isActive
+                 ? "bg-white text-black"
+                 : "text-white/60 hover:text-white hover:bg-white/10"
+               }`
             }
           >
             {({ isActive }) => (
@@ -106,19 +96,18 @@ export default function Sidebar() {
                   {item.icon}
                 </span>
                 {item.label}
-                {isActive && (
-                  <span className="ml-auto text-black font-bold">›</span>
-                )}
+                {isActive && <span className="ml-auto text-black font-bold">›</span>}
               </>
             )}
           </NavLink>
         ))}
       </nav>
 
-      {/* Bottom user — shows real profile data */}
+      {/* Bottom user */}
       <div className="px-4 py-4 border-t border-white/10">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-sm font-bold">
+          <div className="w-8 h-8 rounded-full bg-white/20 flex items-center
+                          justify-center text-sm font-bold">
             {initials}
           </div>
           <div className="min-w-0">

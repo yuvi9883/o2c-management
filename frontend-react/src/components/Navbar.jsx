@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { getProfile, updateProfile, changePassword } from "../Services/api";
+import { useAuth } from "../Context/AuthContext";
+import { updateProfile, changePassword } from "../Services/api";
 
 const titles = {
   "/dashboard": "Dashboard",
@@ -17,7 +18,7 @@ export default function Navbar() {
   const title = titles[location.pathname] || "O2C Management";
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [profile, setProfile] = useState(null);
+  const { profile, setProfile } = useAuth();
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const dropdownRef = useRef(null);
@@ -36,18 +37,15 @@ export default function Navbar() {
 
   // Fetch profile on mount
   useEffect(() => {
-    getProfile()
-      .then((res) => {
-        setProfile(res.data);
+    if (profile) {
         setProfileForm({
-          username: res.data.username || "",
-          fullName: res.data.fullName || "",
-          email: res.data.email || "",
-          mobile: res.data.mobile || "",
+            username: profile.username || "",
+            fullName: profile.fullName || "",
+            email: profile.email || "",
+            mobile: profile.mobile || "",
         });
-      })
-      .catch(() => {});
-  }, []);
+    }
+}, [profile]);
 
   // Close dropdown on outside click
   useEffect(() => {

@@ -41,7 +41,8 @@ export default function Login() {
   };
 
   // ── STEP 2: Verify OTP + Login ────────────────────────────
-  const handleLogin = async () => {
+  // ── STEP 2: Verify OTP + Login ────────────────────────────
+const handleLogin = async () => {
     setError("");
     setMessage("");
 
@@ -50,7 +51,8 @@ export default function Login() {
 
     setLoading(true);
     try {
-      const res = await axios.post(`${API}/auth/login`, {
+      // ✅ FIXED — changed from /auth/login to /auth/login-otp
+      const res = await axios.post(`${API}/auth/login-otp`, {
         username: username.trim(),
         mobile:   mobile.trim(),
         otp:      otp.trim(),
@@ -59,18 +61,20 @@ export default function Login() {
       // Save token and user info
       localStorage.setItem("token",    res.data.token);
       localStorage.setItem("username", res.data.username);
+      localStorage.setItem("role",     res.data.role);
       localStorage.setItem("fullName", res.data.fullName || res.data.username);
 
       navigate("/dashboard");
     } catch (err) {
       setError(
+        err.response?.data?.error ||
         err.response?.data?.message ||
         "Login failed. Please check your OTP and try again."
       );
     } finally {
       setLoading(false);
     }
-  };
+};
 
   const inputCls = (id) =>
     `w-full py-3 pr-4 rounded-xl border bg-white text-black text-sm
