@@ -27,7 +27,16 @@ public class OtpStore {
     @Column(nullable = false)
     private LocalDateTime expiresAt;
 
+    @Column
+    private LocalDateTime createdAt;
+
+    // ✅ ADD THIS — was missing, causes the error
     @Column(nullable = false)
     @Builder.Default
     private boolean used = false;
+
+    @PrePersist
+    public void prePersist() {
+        this.createdAt = LocalDateTime.now();
+    }
 }

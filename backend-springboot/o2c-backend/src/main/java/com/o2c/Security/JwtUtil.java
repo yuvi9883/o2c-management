@@ -1,76 +1,70 @@
 package com.o2c.Security;
 
+import com.o2c.Config.JwtConfig;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Function;
 
 @Component
 public class JwtUtil {
 
-    @Value("${app.jwt.secret}")
-    private String secret;
+    private final JwtConfig jwtConfig;
 
-    @Value("${app.jwt.expiration}")
-    private long expiration;
+    public JwtUtil(JwtConfig jwtConfig) {
+        this.jwtConfig = jwtConfig;
+    }
 
     private Key getSigningKey() {
-        return Keys.hmacShaKeyFor(secret.getBytes());
+        return Keys.hmacShaKeyFor(
+            jwtConfig.getSecret().getBytes(StandardCharsets.UTF_8)
+        );
     }
 
-    // ✅ FIX: Parameter changed from String to UserDetails
-    public String generateToken(UserDetails userDetails) {
-        return createToken(new HashMap<>(), userDetails.getUsername());
-    }
-
-    // ✅ BONUS: Overload to also accept plain String username
     public String generateToken(String username) {
-        return createToken(new HashMap<>(), username);
-    }
-
-    private String createToken(Map<String, Object> claims, String subject) {
         return Jwts.builder()
-                .setClaims(claims)
-                .setSubject(subject)
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + expiration))
+                .setSubject(username)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + jwtConfig.getExpiration()))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
     public String extractUsername(String token) {
-        return extractClaim(token, Claims::getSubject);
+        return getClaims(token).getSubject();
     }
 
-    public Date extractExpiration(String token) {
-        return extractClaim(token, Claims::getExpiration);
+    // ✅ This is the validateToken method JwtAuthFilter calls
+    public boolean validateToken(String token) {
+        try {
+            Claims claims = getClaims(token);
+            return !claims.getExpiration().before(new Date());
+        } catch (ExpiredJwtException e) {
+            System.out.println("Token expired: " + e.getMessage());
+            return false;
+        } catch (UnsupportedJwtException e) {
+            System.out.println("Token unsupported: " + e.getMessage());
+            return false;
+        } catch (MalformedJwtException e) {
+            System.out.println("Token malformed: " + e.getMessage());
+            return false;
+        } catch (SignatureException e) {
+            System.out.println("Invalid signature: " + e.getMessage());
+            return false;
+        } catch (IllegalArgumentException e) {
+            System.out.println("Token empty: " + e.getMessage());
+            return false;
+        }
     }
 
-    public <T> T extractClaim(String token, Function<Claims, T> resolver) {
-        return resolver.apply(extractAllClaims(token));
-    }
-
-    private Claims extractAllClaims(String token) {
+    private Claims getClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
-    }
-
-    private boolean isTokenExpired(String token) {
-        return extractExpiration(token).before(new Date());
-    }
-
-    public boolean validateToken(String token, UserDetails userDetails) {
-        return extractUsername(token).equals(userDetails.getUsername())
-                && !isTokenExpired(token);
     }
 }
