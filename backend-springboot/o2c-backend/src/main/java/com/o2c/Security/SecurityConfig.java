@@ -1,10 +1,8 @@
 package com.o2c.Security;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.Ordered;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -20,7 +18,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.filter.CorsFilter;
 
 import java.util.Arrays;
 import java.util.List;
@@ -47,11 +44,8 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                // ✅ Allow OPTIONS preflight first
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                // ✅ Allow all auth endpoints
                 .requestMatchers("/api/auth/**").permitAll()
-                // ✅ Everything else needs JWT
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session
@@ -68,16 +62,14 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        // ✅ Read from Railway env variable
-        List<String> origins = Arrays.asList(allowedOrigins.split(","));
-        System.out.println(">>> CORS allowed origins: " + origins);
-        config.setAllowedOrigins(origins);
+        System.out.println(">>> CORS origins: " + allowedOrigins);
 
-        config.setAllowedMethods(List.of(
+        config.setAllowedOrigins(Arrays.asList(allowedOrigins.split(",")));
+        config.setAllowedMethods(Arrays.asList(
             "GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"
         ));
-        config.setAllowedHeaders(List.of("*"));
-        config.setExposedHeaders(List.of("Authorization"));
+        config.setAllowedHeaders(Arrays.asList("*"));
+        config.setExposedHeaders(Arrays.asList("Authorization"));
         config.setAllowCredentials(true);
         config.setMaxAge(3600L);
 
@@ -85,17 +77,6 @@ public class SecurityConfig {
             new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
-    }
-
-    // ✅ This forces CORS headers BEFORE Spring Security processes request
-    @Bean
-    public FilterRegistrationBean<CorsFilter> corsFilterRegistration() {
-        FilterRegistrationBean<CorsFilter> bean =
-            new FilterRegistrationBean<>(
-                new CorsFilter(corsConfigurationSource())
-            );
-        bean.setOrder(Ordered.HIGHEST_PRECEDENCE);
-        return bean;
     }
 
     @Bean
