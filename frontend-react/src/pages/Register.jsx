@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 
-const API = "http://localhost:8080/api";
+const API = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -43,8 +43,9 @@ export default function Register() {
       setMessage("OTP sent! Check the Spring Boot terminal for the OTP code.");
     } catch (err) {
       setError(
-        err.response?.data?.message ||
-        "Could not send OTP. Make sure the Spring Boot backend is running."
+       err.response?.data?.error ||
+err.response?.data?.message ||
+"Could not send OTP. Please try again."
       );
     } finally {
       setLoading(false);
